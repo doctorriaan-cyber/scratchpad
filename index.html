@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -515,7 +516,7 @@
                     <span>All Pages</span>
                 </button>
             </header>
-            <main className="flex-grow flex items-center justify-center overflow-hidden p-4">
+            <main className="flex-grow flex items-center justify-center overflow-hidden p-2 sm:p-4">
                <div className="relative w-full h-full max-w-full max-h-full shadow-2xl rounded-lg" style={{ aspectRatio: '210 / 297' }}>
                   {currentPage === -1 ? (
                     <div className={`w-full h-full rounded-lg flex flex-col items-center justify-center text-center text-white p-6 transition-colors duration-500 ${coverClass}`}>
@@ -548,35 +549,6 @@
                   )}
                   
                   {currentPage >= 0 && (
-                      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10">
-                          <Toolbar activeTool={tool} onToolChange={setTool} />
-                      </div>
-                  )}
-                  
-                  {currentPage >= 0 && (
-                      <span className="absolute bottom-6 left-0 right-0 text-center text-sm text-gray-500 font-medium">
-                          {currentPage + 1} / {pages.length}
-                      </span>
-                  )}
-
-                  <button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === -1}
-                      className="absolute bottom-4 left-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white disabled:opacity-0 disabled:cursor-not-allowed transition-all z-10"
-                      aria-label="Previous page"
-                  >
-                      <ChevronLeftIcon className="w-6 h-6 text-gray-700" />
-                  </button>
-                  <button
-                      onClick={handleNextPage}
-                      disabled={isNextDisabled}
-                      className="absolute bottom-4 right-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all z-10"
-                      aria-label="Next page"
-                  >
-                      <ChevronRightIcon className="w-6 h-6 text-gray-700" />
-                  </button>
-                  
-                  {currentPage >= 0 && (
                     <>
                       <button
                           onClick={handleShare}
@@ -596,6 +568,46 @@
                   )}
                </div>
             </main>
+
+            {/* --- CONTROLS OVERLAY --- */}
+            {viewMode === 'page' && (
+                <>
+                    {/* Toolbar */}
+                    {currentPage >= 0 && (
+                        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
+                            <Toolbar activeTool={tool} onToolChange={setTool} />
+                        </div>
+                    )}
+                    
+                    {/* Prev Button */}
+                    <button
+                        onClick={handlePrevPage}
+                        disabled={currentPage === -1}
+                        className="absolute bottom-4 left-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white disabled:opacity-0 disabled:cursor-not-allowed transition-all z-10"
+                        aria-label="Previous page"
+                    >
+                        <ChevronLeftIcon className="w-6 h-6 text-gray-700" />
+                    </button>
+                    
+                    {/* Page number */}
+                    {currentPage >= 0 && (
+                        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-sm text-gray-500 font-medium">
+                            {currentPage + 1} / {pages.length}
+                        </span>
+                    )}
+
+                    {/* Next Button */}
+                    <button
+                        onClick={handleNextPage}
+                        disabled={isNextDisabled}
+                        className="absolute bottom-4 right-4 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all z-10"
+                        aria-label="Next page"
+                    >
+                        <ChevronRightIcon className="w-6 h-6 text-gray-700" />
+                    </button>
+                </>
+            )}
+
             {showDeleteConfirm && <DeleteConfirmationModal onConfirm={handleConfirmDelete} onCancel={() => setShowDeleteConfirm(false)} />}
           </div>
         );
