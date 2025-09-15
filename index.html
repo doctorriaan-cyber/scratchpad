@@ -161,22 +161,45 @@
           useEffect(() => {
             const canvas = canvasRef.current;
             if (!canvas) return;
-
-            const scale = window.devicePixelRatio || 1;
-            canvas.width = canvas.offsetWidth * scale;
-            canvas.height = canvas.offsetHeight * scale;
-
+        
             const context = canvas.getContext('2d');
             if (!context) return;
-            
-            context.scale(scale, scale);
-            context.lineCap = 'round';
-            context.lineJoin = 'round';
-            
-            context.fillStyle = 'white';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            
             contextRef.current = context;
+        
+            const setCanvasDimensions = () => {
+                const tempCanvas = document.createElement('canvas');
+                const tempContext = tempCanvas.getContext('2d');
+                const hasContent = canvas.width > 0 && canvas.height > 0;
+                
+                if (hasContent) {
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    tempContext.drawImage(canvas, 0, 0);
+                }
+        
+                const scale = window.devicePixelRatio || 1;
+                canvas.width = canvas.offsetWidth * scale;
+                canvas.height = canvas.offsetHeight * scale;
+        
+                context.scale(scale, scale);
+                context.lineCap = 'round';
+                context.lineJoin = 'round';
+                
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+        
+                if (hasContent) {
+                    context.drawImage(tempCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
+                }
+            };
+            
+            setCanvasDimensions();
+        
+            window.addEventListener('resize', setCanvasDimensions);
+        
+            return () => {
+                window.removeEventListener('resize', setCanvasDimensions);
+            };
           }, []);
 
           useEffect(() => {
@@ -290,19 +313,9 @@
               
               // Re-apply the white background
               context.fillStyle = 'white';
-              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
             }
             setShowClearConfirm(false);
-          };
-
-          const downloadFallback = (canvas, fileName) => {
-            const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
           };
 
           const handleShare = () => {
@@ -315,47 +328,23 @@
             const tempCtx = tempCanvas.getContext('2d');
             if (!tempCtx) return;
 
-            // Create a white background
             tempCtx.fillStyle = 'white';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             tempCtx.drawImage(canvas, 0, 0);
+
+            const dataUrl = tempCanvas.toDataURL('image/jpeg', 1.0);
             
-            const fileName = `note-${Date.now()}.jpg`;
-
-            tempCanvas.toBlob(async (blob) => {
-                if (!blob) {
-                    console.error("Canvas toBlob failed.");
-                    downloadFallback(tempCanvas, fileName);
-                    return;
-                }
-                const file = new File([blob], fileName, { type: blob.type });
-
-                // Use Web Share API if it supports sharing files
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'My Note',
-                            text: 'Check out this note I made!',
-                        });
-                    } catch (error) {
-                        // Ignore AbortError from user canceling share sheet
-                        if (error.name !== 'AbortError') {
-                            console.error('Error sharing file:', error);
-                            // Fallback to download if sharing fails for other reasons
-                            downloadFallback(tempCanvas, fileName);
-                        }
-                    }
-                } else {
-                    // Fallback for browsers that don't support Web Share API for files
-                    downloadFallback(tempCanvas, fileName);
-                }
-            }, 'image/jpeg', 1.0);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `note-${Date.now()}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
           };
 
           return (
             <div className="h-screen w-screen bg-gray-100 flex items-center justify-center p-2 sm:p-4">
-              <main className="relative w-full h-full max-w-[450px] max-h-[850px] bg-white rounded-3xl shadow-2xl overflow-hidden touch-none border-4 border-gray-800">
+              <main className="relative w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden touch-none border-4 border-gray-800">
                 <canvas
                   ref={canvasRef}
                   className="w-full h-full"
